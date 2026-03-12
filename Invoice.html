@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Form for CRM</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        form { background: #f9f9f9; padding: 20px; border-radius: 8px; }
+        label { display: block; margin-top: 10px; font-weight: bold; }
+        input, textarea, select { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
+        textarea { height: 100px; }
+        .hidden-admin { display: none; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+        button:hover { background: #0056b3; }
+        #invoicePreview { margin-top: 30px; padding: 20px; background: white; border: 1px solid #ddd; border-radius: 8px; }
+        .admin-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h1>Invoice Form</h1>
+    <form id="invoiceForm">
+        <h2>Customer Information</h2>
+        <label>First Name:</label>
+        <input type="text" id="firstName" name="firstName" required>
+
+        <label>Last Name:</label>
+        <input type="text" id="lastName" name="lastName" required>
+
+        <label>Street Address:</label>
+        <input type="text" id="street" name="street" required>
+
+        <label>City:</label>
+        <input type="text" id="city" name="city" required>
+
+        <label>State:</label>
+        <input type="text" id="state" name="state" required>
+
+        <label>Zip:</label>
+        <input type="text" id="zip" name="zip" required>
+
+        <label>Cell Number:</label>
+        <input type="tel" id="cell" name="cell" required>
+
+        <h2>Work Description (Visible on Invoice)</h2>
+        <label>Notes (Description of work and parts):</label>
+        <textarea id="description" name="description" placeholder="Enter description of work performed and parts used..."></textarea>
+
+        <label>Total Price ($):</label>
+        <input type="number" id="totalPrice" name="totalPrice" step="0.01" min="0" required>
+
+        <div class="admin-section hidden-admin">
+            <h2>Admin Notes (Not on Invoice)</h2>
+            <label>Internal Notes:</label>
+            <textarea id="adminNotes" name="adminNotes" placeholder="Internal notes that won't show on invoice..."></textarea>
+        </div>
+
+        <button type="button" onclick="toggleAdmin()">Toggle Admin Notes</button>
+        <button type="button" onclick="saveData()">Save to CRM (Local Storage)</button>
+        <button type="submit">Generate Invoice Preview</button>
+    </form>
+
+    <div id="invoicePreview"></div>
+
+    <script>
+        // Load saved data on page load
+        window.onload = function() {
+            loadData();
+        };
+
+        function getFormData() {
+            const formData = {};
+            const elements = document.getElementById('invoiceForm').elements;
+            for (let i = 0; i < elements.length; i++) {
+                if (elements[i].name) {
+                    formData[elements[i].name] = elements[i].value;
+                }
+            }
+            return formData;
+        }
+
+        function saveData() {
+            const data = getFormData();
+            localStorage.setItem('invoiceCRM', JSON.stringify(data));
+            alert('Data saved to CRM (localStorage)!');
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('invoiceCRM');
+            if (saved) {
+                const data = JSON.parse(saved);
+                for (let key in data) {
+                    const el = document.getElementById(key);
+                    if (el) el.value = data[key];
+                }
+                generatePreview();
+            }
+        }
+
+        function toggleAdmin() {
+            const admin = document.querySelector('.admin-section');
+            admin.classList.toggle('hidden-admin');
+        }
+
+        function generatePreview() {
+            const data = getFormData();
+            let preview = `
+                <h2>Invoice Preview</h2>
+                <p><strong>Customer:</strong> ${data.firstName || ''} ${data.lastName || ''}</p>
+                <p><strong>Address:</strong> ${data.street || ''}, ${data.city || ''}, ${data.state || ''} ${data.zip || ''}</p>
+                <p><strong>Cell:</strong> ${data.cell || ''}</p>
+                <p><strong>Description:</strong></p>
+                <p>${data.description || ''}</p>
+                <p><strong>Total: $${parseFloat(data.totalPrice || 0).toFixed(2)}</strong></p>
+            `;
+            document.getElementById('invoicePreview').innerHTML = preview;
+        }
+
+        document.getElementById('invoiceForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            generatePreview();
+            saveData();  // Auto-save on preview
+        });
+    </script>
+</body>
+</html>
